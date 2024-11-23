@@ -25,11 +25,11 @@ public class JwtTokenProvider {
         key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
-    public String generate(Long userId, String role) {
+    public LocalJwtDto generate(Long userId, String role) {
         Claims claims = Jwts.claims();
         claims.put("id", userId);
         claims.put("role", role);
-        return generateToken(claims);
+        return new LocalJwtDto(generateToken(claims));
     }
 
     private String generateToken(Claims claims) {
@@ -58,6 +58,15 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.get("id", Long.class);
+    }
+
+    public String getRole(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("role", String.class);
     }
 
     //TODO: add detailed exception

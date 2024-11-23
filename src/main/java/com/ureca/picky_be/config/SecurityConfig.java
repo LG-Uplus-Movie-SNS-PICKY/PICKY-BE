@@ -17,9 +17,10 @@ public class SecurityConfig {
 
     // 인증 없이 접근 가능한 경로 (Swagger 및 공개 API)
     private static final String[] AUTH_WHITELIST = {
-            "/swagger-ui/**",         // Swagger UI 관련 리소스
+            "/swagger-ui/**",         // Swagger
             "/v3/api-docs/**",        // OpenAPI 문서
-            "/"                       // 루트 경로 (테스트용)
+            "/",                       // 루트 경로 (테스트용)
+            "/**"                       //모든 경로 오픈
     };
 
     @Bean

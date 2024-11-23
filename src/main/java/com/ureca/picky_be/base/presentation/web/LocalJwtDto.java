@@ -1,4 +1,4 @@
 package com.ureca.picky_be.base.presentation.web;
 
-public record JwtDto(String accessToken) {
+public record LocalJwtDto(String accessToken) {
 }
