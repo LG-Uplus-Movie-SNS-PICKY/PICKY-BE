@@ -42,3 +42,4 @@ out/
 **/mysql-prod.yml
 **/redis.yml
 **/jwt.yml
+**/naver.yml
