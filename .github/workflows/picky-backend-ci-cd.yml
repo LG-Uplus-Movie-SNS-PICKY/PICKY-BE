@@ -39,6 +39,8 @@ jobs:
           echo "${{ secrets.REDIS }}" >> redis.yml
           touch naver.yml
           echo "${{ secrets.NAVER }}" >> naver.yml
+          touch google.yml
+          echo "${{ secrets.GOOGLE }}" >> google.yml
           touch frontend.yml
           echo "${{ secrets.FRONTEND }}" >> frontend.yml
           

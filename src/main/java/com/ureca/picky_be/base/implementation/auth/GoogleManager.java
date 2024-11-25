@@ -5,7 +5,7 @@ import com.ureca.picky_be.base.business.auth.dto.OAuth2Token;
 import com.ureca.picky_be.base.persistence.UserRepository;
 import com.ureca.picky_be.base.presentation.web.JwtTokenProvider;
 import com.ureca.picky_be.base.presentation.web.LocalJwtDto;
-import com.ureca.picky_be.config.oAuth2.NaverConfig;
+import com.ureca.picky_be.config.oAuth2.GoogleConfig;
 import com.ureca.picky_be.jpa.user.Role;
 import com.ureca.picky_be.jpa.user.SocialPlatform;
 import com.ureca.picky_be.jpa.user.User;
@@ -19,30 +19,30 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
-public class NaverManager {
+public class GoogleManager {
 
-    private final NaverConfig naverConfig;
+    private final GoogleConfig googleConfig;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
-    private final RestClient restClient = RestClient.create();
+    RestClient restClient = RestClient.create();
 
     public String buildCodeUrl(String state){
         return  UriComponentsBuilder
-                .fromHttpUrl(naverConfig.getCodeUrl())
-                .queryParam("client_id", naverConfig.getClientId())
-                .queryParam("client_secret", naverConfig.getClientSecret())
+                .fromHttpUrl(googleConfig.getCodeUrl())
+                .queryParam("client_id", googleConfig.getClientId())
                 .queryParam("response_type", "code")
-                .queryParam("redirect_uri", naverConfig.getRedirectUri())
+                .queryParam("redirect_uri", googleConfig.getRedirectUri())
+                .queryParam("scope", "email")
                 .queryParam("state", state)
                 .build()
                 .toUriString();
     }
 
     public OAuth2Token getOAuth2Token(String state, String code){
-        try {
+        try{
             return restClient
-                    .get()
+                    .post()
                     .uri(buildTokenUrl(state, code))
                     .retrieve()
                     .toEntity(OAuth2Token.class)
@@ -50,47 +50,48 @@ public class NaverManager {
         } catch (RestClientResponseException e) {
             throw new IllegalStateException("네이버 token 요청 호출을 실패했습니다: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new RuntimeException("네이버 token 요청 중 예외가 발생했습니다.", e);
+            throw new RuntimeException("구글 token 요청 중 예외가 발생했습니다.", e);
         }
     }
 
     private String buildTokenUrl(String state, String code){
         return UriComponentsBuilder
-                .fromHttpUrl(naverConfig.getTokenUrl())
-                .queryParam("client_id", naverConfig.getClientId())
-                .queryParam("client_secret", naverConfig.getClientSecret())
-                .queryParam("grant_type", "authorization_code")
-                .queryParam("state", state)
+                .fromHttpUrl(googleConfig.getTokenUrl())
+                .queryParam("client_id", googleConfig.getClientId())
+                .queryParam("client_secret", googleConfig.getClientSecret())
                 .queryParam("code", code)
-                .build().toUriString();
+                .queryParam("grant_type", "authorization_code")
+                .queryParam("redirect_uri", googleConfig.getRedirectUri())
+                .build()
+                .toUriString();
     }
 
-    public String getUserInfo(String accessToken) {
+    public String getUserInfo(String accessToken){
         try {
             Map response = restClient
-                    .get()
-                    .uri(buildInfoUrl())
-                    .header("Authorization", "Bearer " + accessToken)
-                    .retrieve()
-                    .body(Map.class);
+                                .get()
+                                .uri(buildInfoUrl())
+                                .header("Authorization", "Bearer " + accessToken)
+                                .retrieve()
+                                .body(Map.class);
+            return (String) response.get("email");
 
-            return (String) ((Map) response.get("response")).get("email");
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException("네이버 유저 정보 요청 호출을 실패했습니다: " + e.getMessage(), e);
+            throw new IllegalStateException("구글 유저 정보 요청 호출을 실패했습니다: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new RuntimeException("네이버 유저 정보 요청 중 예외가 발생했습니다.", e);
+            throw new RuntimeException("구글 유저 정보 요청 중 예외가 발생했습니다.", e);
         }
     }
 
     private String buildInfoUrl(){
         return UriComponentsBuilder
-                .fromHttpUrl(naverConfig.getInfoUrl())
+                .fromHttpUrl(googleConfig.getInfoUrl())
                 .build()
                 .toUriString();
     }
 
     public LocalJwtDto getLocalJwt(String email, String accessToken) {
-        User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.NAVER)
+        User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.GOOGLE)
                 .orElseGet(() -> createNewUser(email));
 
         return jwtTokenProvider.generate(user.getId(), user.getRole().toString());
@@ -98,7 +99,7 @@ public class NaverManager {
 
     private User createNewUser(String email) {
         User newUser = User.builder()
-                .socialPlatform(SocialPlatform.NAVER)
+                .socialPlatform(SocialPlatform.GOOGLE)
                 .role(Role.USER)
                 .email(email)
                 .build();
@@ -125,7 +126,7 @@ public class NaverManager {
 
     private String buildFrontendUrl(){
         return UriComponentsBuilder
-                .fromHttpUrl(naverConfig.getFrontendServer())
+                .fromHttpUrl(googleConfig.getFrontendServer())
                 .build()
                 .toUriString();
     }

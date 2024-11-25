@@ -44,3 +44,4 @@ out/
 **/jwt.yml
 **/naver.yml
 **/frontend.yml
+**/google.yml
