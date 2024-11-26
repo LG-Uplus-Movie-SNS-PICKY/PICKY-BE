@@ -11,6 +11,7 @@ import com.ureca.picky_be.jpa.user.SocialPlatform;
 import com.ureca.picky_be.jpa.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -74,7 +75,6 @@ public class KakaoManager {
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .retrieve()
                     .body(Map.class);
-            System.out.println(response);
             return (String) ((Map) response.get("kakao_account")).get("email");
 
         } catch (RestClientResponseException e) {
@@ -127,6 +127,40 @@ public class KakaoManager {
     private String buildFrontendUrl(){
         return UriComponentsBuilder
                 .fromHttpUrl(kakaoConfig.getFrontendServer())
+                .build()
+                .toUriString();
+    }
+
+    @Transactional
+    public String deleteAccount(String jwt, OAuth2Token oAuth2Token) {
+        try {
+            restClient
+                    .post()
+                    .uri(buildDeleteUrl(oAuth2Token.accessToken()))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + oAuth2Token.accessToken())
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            return "kakao session expired or server error : " + e.getMessage();
+        } catch (Exception e) {
+            return "kakao server error-1";
+        }
+
+        if(jwtTokenProvider.validateToken(jwt)){
+            Long userId = jwtTokenProvider.getUserId(jwt);
+            //TODO: userId 못찾을 경우 예외처리
+            userRepository.deleteById(userId);
+            return "delete success";
+        } else{
+            return "jwt session expired";
+        }
+    }
+
+    private String buildDeleteUrl(String accessToken){
+        return UriComponentsBuilder
+                .fromHttpUrl(kakaoConfig.getDeleteUrl())
+                .queryParam("token", accessToken)
                 .build()
                 .toUriString();
     }
