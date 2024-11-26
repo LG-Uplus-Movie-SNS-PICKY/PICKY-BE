@@ -1,5 +1,6 @@
 package com.ureca.picky_be.base.business.auth;
 
+import com.ureca.picky_be.base.business.auth.dto.DeleteUserReq;
 import com.ureca.picky_be.base.business.auth.dto.OAuth2Token;
 import com.ureca.picky_be.base.implementation.auth.KakaoManager;
 import com.ureca.picky_be.base.presentation.web.LocalJwtDto;
@@ -27,4 +28,11 @@ public class KakaoService implements OAuth2UseCase {
         LocalJwtDto jwt = kakaoManager.getLocalJwt(email, oAuth2Token.accessToken());
         return kakaoManager.sendResponseToFrontend(oAuth2Token, email, jwt);
     }
+
+    @Override
+    public String deleteAccount(DeleteUserReq req) {
+        return kakaoManager.deleteAccount(req.jwt(), req.oAuth2Token());
+    }
+
+
 }

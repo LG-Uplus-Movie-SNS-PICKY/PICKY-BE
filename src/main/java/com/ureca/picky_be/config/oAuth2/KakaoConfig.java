@@ -26,6 +26,9 @@ public class KakaoConfig {
     @Value("${kakao.info_url}")
     private String infoUrl;
 
+    @Value("${kakao.delete_url}")
+    private String deleteUrl;
+
     @Value("${frontend.server}")
     private String frontendServer;
 
