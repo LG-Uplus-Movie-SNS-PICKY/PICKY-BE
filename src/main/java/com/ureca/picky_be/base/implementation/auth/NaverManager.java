@@ -11,6 +11,7 @@ import com.ureca.picky_be.jpa.user.SocialPlatform;
 import com.ureca.picky_be.jpa.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -89,7 +90,7 @@ public class NaverManager {
                 .toUriString();
     }
 
-    public LocalJwtDto getLocalJwt(String email, String accessToken) {
+    public LocalJwtDto getLocalJwt(String email) {
         User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.NAVER)
                 .orElseGet(() -> createNewUser(email));
 
@@ -129,4 +130,40 @@ public class NaverManager {
                 .build()
                 .toUriString();
     }
+
+    @Transactional
+    public String deleteAccount(String jwt, OAuth2Token oAuth2Token) {
+        try {
+            restClient
+                    .get()
+                    .uri(buildDeleteUrl(oAuth2Token.accessToken()))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            return "naver session expired or server error : " + e.getMessage();
+        } catch (Exception e) {
+            return "naver server error-1";
+        }
+
+        if(jwtTokenProvider.validateToken(jwt)){
+            Long userId = jwtTokenProvider.getUserId(jwt);
+            userRepository.deleteById(userId);
+            //TODO: userId 못찾을 경우 예외처리
+            return "delete success";
+        } else{
+            return "jwt session expired";
+        }
+    }
+
+    private String buildDeleteUrl(String accessToken){
+        return UriComponentsBuilder
+                .fromHttpUrl(naverConfig.getTokenUrl())
+                .queryParam("client_id", naverConfig.getClientId())
+                .queryParam("client_secret", naverConfig.getClientSecret())
+                .queryParam("grant_type", "delete")
+                .queryParam("access_token", accessToken)
+                .build()
+                .toUriString();
+    }
+
 }
