@@ -1,5 +1,6 @@
 package com.ureca.picky_be.base.business.auth;
 
+import com.ureca.picky_be.base.business.auth.dto.DeleteUserReq;
 import com.ureca.picky_be.base.business.auth.dto.OAuth2Token;
 import com.ureca.picky_be.base.implementation.auth.GoogleManager;
 import com.ureca.picky_be.base.presentation.web.LocalJwtDto;
@@ -27,4 +28,11 @@ public class GoogleService implements OAuth2UseCase{
         LocalJwtDto jwt = googleManager.getLocalJwt(email, oAuth2Token.accessToken());
         return googleManager.sendResponseToFrontend(oAuth2Token, email, jwt);
     }
+
+    @Override
+    public String deleteAccount(DeleteUserReq req) {
+        return googleManager.deleteAccount(req.jwt(), req.oAuth2Token());
+    }
+
+
 }
