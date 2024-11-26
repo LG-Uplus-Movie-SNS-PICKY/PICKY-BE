@@ -2,6 +2,8 @@ package com.ureca.picky_be.base.presentation.controller.auth;
 
 import com.ureca.picky_be.base.business.auth.OAuth2UseCase;
 import com.ureca.picky_be.base.business.auth.OAuth2UseCaseResolver;
+import com.ureca.picky_be.base.business.auth.dto.DeleteUserReq;
+import com.ureca.picky_be.base.business.auth.dto.OAuth2Token;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,4 +30,10 @@ public class OAuth2Controller {
         return ResponseEntity.ok("소셜 로그인 성공");
     }
 
+    @DeleteMapping("/{platform}/user")
+    public ResponseEntity<String> deleteUser(@PathVariable String platform,
+                                             @RequestBody DeleteUserReq req) {
+        OAuth2UseCase oAuth2UseCase = oAuth2UseCaseResolver.resolve(platform);
+        return ResponseEntity.ok(oAuth2UseCase.deleteAccount(req));
+    }
 }
