@@ -25,6 +25,9 @@ public class GoogleConfig {
     @Value("${google.info_url}")
     private String infoUrl;
 
+    @Value("${google.delete_url}")
+    private String deleteUrl;
+
     @Value("${frontend.server}")
     private String frontendServer;
 }

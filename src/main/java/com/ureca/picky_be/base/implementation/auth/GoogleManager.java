@@ -10,6 +10,7 @@ import com.ureca.picky_be.jpa.user.SocialPlatform;
 import com.ureca.picky_be.jpa.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -127,6 +128,39 @@ public class GoogleManager {
     private String buildFrontendUrl(){
         return UriComponentsBuilder
                 .fromHttpUrl(googleConfig.getFrontendServer())
+                .build()
+                .toUriString();
+    }
+
+    @Transactional
+    public String deleteAccount(String jwt, OAuth2Token oAuth2Token) {
+        try {
+            restClient
+                    .post()
+                    .uri(buildDeleteUrl(oAuth2Token.accessToken()))
+                    .header("Content-Type", "application/json")
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            return "google session expired or server error : " + e.getMessage();
+        } catch (Exception e) {
+            return "google server error-1";
+        }
+
+        if(jwtTokenProvider.validateToken(jwt)){
+            Long userId = jwtTokenProvider.getUserId(jwt);
+            userRepository.deleteById(userId);
+            //TODO: userId 못찾을 경우 예외처리
+            return "delete success";
+        } else{
+            return "jwt session expired";
+        }
+    }
+
+    private String buildDeleteUrl(String accessToken){
+        return UriComponentsBuilder
+                .fromHttpUrl(googleConfig.getDeleteUrl())
+                .queryParam("token", accessToken)
                 .build()
                 .toUriString();
     }
