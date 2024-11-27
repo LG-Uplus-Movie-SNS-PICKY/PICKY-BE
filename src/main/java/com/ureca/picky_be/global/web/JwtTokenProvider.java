@@ -1,4 +1,4 @@
-package com.ureca.picky_be.base.presentation.web;
+package com.ureca.picky_be.global.web;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

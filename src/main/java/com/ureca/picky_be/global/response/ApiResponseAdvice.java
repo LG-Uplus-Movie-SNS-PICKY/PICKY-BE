@@ -41,6 +41,11 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request, ServerHttpResponse response) {
         try {
+
+            if (body instanceof SuccessCode) {
+                return ApiResponse.success((SuccessCode) body);
+            }
+
             // 이미 ApiResponse 타입이면 그대로 반환
             if (body instanceof ApiResponse) {
                 return body;

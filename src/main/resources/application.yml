@@ -15,6 +15,7 @@ spring:
       - classpath:properties/google.yml
       - classpath:properties/kakao.yml
       - classpath:properties/frontend.yml
+      - classpath:properties/swagger.yml
 
 
 ---

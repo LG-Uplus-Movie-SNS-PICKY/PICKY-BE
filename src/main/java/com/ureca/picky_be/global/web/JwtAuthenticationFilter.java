@@ -1,4 +1,4 @@
-package com.ureca.picky_be.base.presentation.web;
+package com.ureca.picky_be.global.web;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -35,13 +35,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             Long userId = jwtTokenProvider.getUserId(token);
-            String role = jwtTokenProvider.getRole(token); // 추가: 역할 추출
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(String.valueOf(userId));
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
 
-            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role)); // 역할 추가
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, authorities);
+                    userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

@@ -1,4 +1,4 @@
-package com.ureca.picky_be.base.presentation.web;
+package com.ureca.picky_be.global.web;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

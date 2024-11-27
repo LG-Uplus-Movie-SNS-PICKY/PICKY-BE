@@ -1,16 +1,24 @@
 package com.ureca.picky_be.base.implementation.auth;
 
+import com.ureca.picky_be.base.business.auth.dto.DeleteUserReq;
+import com.ureca.picky_be.base.business.auth.dto.LoginUrlResp;
 import com.ureca.picky_be.base.business.auth.dto.LoginUserResp;
 import com.ureca.picky_be.base.business.auth.dto.OAuth2Token;
 import com.ureca.picky_be.base.persistence.UserRepository;
-import com.ureca.picky_be.base.presentation.web.JwtTokenProvider;
-import com.ureca.picky_be.base.presentation.web.LocalJwtDto;
+import com.ureca.picky_be.global.exception.CustomException;
+import com.ureca.picky_be.global.exception.ErrorCode;
+import com.ureca.picky_be.global.success.SuccessCode;
+import com.ureca.picky_be.global.web.JwtTokenProvider;
+import com.ureca.picky_be.global.web.LocalJwtDto;
 import com.ureca.picky_be.config.oAuth2.KakaoConfig;
 import com.ureca.picky_be.jpa.user.Role;
 import com.ureca.picky_be.jpa.user.SocialPlatform;
 import com.ureca.picky_be.jpa.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -27,15 +35,15 @@ public class KakaoManager {
 
     RestClient restClient = RestClient.create();
 
-    public String buildCodeUrl(String state){
-        return  UriComponentsBuilder
+    public LoginUrlResp buildCodeUrl(String state){
+        return new LoginUrlResp(UriComponentsBuilder
                 .fromHttpUrl(kakaoConfig.getCodeUrl())
                 .queryParam("client_id", kakaoConfig.getClientId())
                 .queryParam("response_type", "code")
                 .queryParam("redirect_uri", kakaoConfig.getRedirectUri())
                 .queryParam("state", state)
                 .build()
-                .toUriString();
+                .toUriString());
     }
 
     public OAuth2Token getOAuth2Token(String code){
@@ -47,9 +55,9 @@ public class KakaoManager {
                     .toEntity(OAuth2Token.class)
                     .getBody();
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException("카카오 token 요청 호출을 실패했습니다: " + e.getMessage(), e);
+            throw new CustomException(ErrorCode.VALIDATION_ERROR);
         } catch (Exception e) {
-            throw new RuntimeException("카카오 token 요청 중 예외가 발생했습니다.", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -74,13 +82,12 @@ public class KakaoManager {
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .retrieve()
                     .body(Map.class);
-            System.out.println(response);
             return (String) ((Map) response.get("kakao_account")).get("email");
 
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException("카카오 유저 정보 요청 호출을 실패했습니다: " + e.getMessage(), e);
+            throw new CustomException(ErrorCode.VALIDATION_ERROR);
         } catch (Exception e) {
-            throw new RuntimeException("카카오 유저 정보 요청 중 예외가 발생했습니다.", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -92,21 +99,28 @@ public class KakaoManager {
     }
 
     public LocalJwtDto getLocalJwt(String email, String accessToken) {
-        User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.KAKAO)
-                .orElseGet(() -> createNewUser(email));
-
-        return jwtTokenProvider.generate(user.getId(), user.getRole().toString());
+        try{
+            User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.KAKAO)
+                    .orElseGet(() -> createNewUser(email));
+            return jwtTokenProvider.generate(user.getId(), user.getRole().toString());
+        } catch (Exception e){
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
     }
 
     private User createNewUser(String email) {
-        User newUser = User.builder()
-                .socialPlatform(SocialPlatform.KAKAO)
-                .role(Role.USER)
-                .email(email)
-                .build();
-        return userRepository.save(newUser);
+        try{
+            User newUser = User.builder()
+                    .socialPlatform(SocialPlatform.KAKAO)
+                    .role(Role.USER)
+                    .email(email)
+                    .build();
+            return userRepository.save(newUser);
+        } catch (Exception e){
+            throw new CustomException(ErrorCode.USER_SAVE_FAILED);
+        }
     }
-    public String sendResponseToFrontend(OAuth2Token oAuth2Token, String email, LocalJwtDto jwt) {
+    public SuccessCode sendResponseToFrontend(OAuth2Token oAuth2Token, String email, LocalJwtDto jwt) {
         LoginUserResp resp = new LoginUserResp(oAuth2Token, email, jwt);
         try {
             restClient
@@ -116,17 +130,50 @@ public class KakaoManager {
                     .body(resp)
                     .retrieve()
                     .toBodilessEntity();
-            return "프론트엔드로 성공적으로 반환";
+            return SuccessCode.REQUEST_FRONT_SUCCESS;
         } catch (RestClientResponseException e) {
-            return "프론트엔드로 POST 요청 실패: " + e.getMessage();
+            throw new CustomException(ErrorCode.BAD_REQUEST);
         } catch (Exception e) {
-            return "프론트엔드로 POST 요청 중 예외 발생: " + e.getMessage();
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     private String buildFrontendUrl(){
         return UriComponentsBuilder
                 .fromHttpUrl(kakaoConfig.getFrontendServer())
+                .build()
+                .toUriString();
+    }
+
+    @Transactional
+    public SuccessCode deleteAccount(DeleteUserReq req) {
+        restClient
+                .post()
+                .uri(buildDeleteUrl(req.oAuth2Token().accessToken()))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + req.oAuth2Token().accessToken())
+                .retrieve()
+                .toBodilessEntity();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!authentication.isAuthenticated()) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Long userId = Long.parseLong(authentication.getName());
+
+        if (!userRepository.existsById(userId)) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        userRepository.deleteById(userId);
+        return SuccessCode.REQUEST_DELETE_ACCOUNT_SUCCESS;
+    }
+
+    private String buildDeleteUrl(String accessToken){
+        return UriComponentsBuilder
+                .fromHttpUrl(kakaoConfig.getDeleteUrl())
+                .queryParam("token", accessToken)
                 .build()
                 .toUriString();
     }
