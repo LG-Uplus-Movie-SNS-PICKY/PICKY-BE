@@ -1,7 +1,6 @@
 springdoc:
   api-docs:
-    groups:
-      enabled: true
+    path: /v3/api-docs
   swagger-ui:
-    enabled: true
-    display-request-duration: true
+    path: /swagger-ui.html
+    url: /v3/api-docs
