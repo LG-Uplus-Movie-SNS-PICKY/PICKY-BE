@@ -1,15 +1,22 @@
 package com.ureca.picky_be.base.implementation.auth;
 
+import com.ureca.picky_be.base.business.auth.dto.DeleteUserReq;
+import com.ureca.picky_be.base.business.auth.dto.LoginUrlResp;
 import com.ureca.picky_be.base.business.auth.dto.LoginUserResp;
 import com.ureca.picky_be.base.business.auth.dto.OAuth2Token;
 import com.ureca.picky_be.base.persistence.UserRepository;
-import com.ureca.picky_be.base.presentation.web.JwtTokenProvider;
-import com.ureca.picky_be.base.presentation.web.LocalJwtDto;
+import com.ureca.picky_be.global.exception.CustomException;
+import com.ureca.picky_be.global.exception.ErrorCode;
+import com.ureca.picky_be.global.success.SuccessCode;
+import com.ureca.picky_be.global.web.JwtTokenProvider;
+import com.ureca.picky_be.global.web.LocalJwtDto;
 import com.ureca.picky_be.config.oAuth2.NaverConfig;
 import com.ureca.picky_be.jpa.user.Role;
 import com.ureca.picky_be.jpa.user.SocialPlatform;
 import com.ureca.picky_be.jpa.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -28,8 +35,8 @@ public class NaverManager {
 
     private final RestClient restClient = RestClient.create();
 
-    public String buildCodeUrl(String state){
-        return  UriComponentsBuilder
+    public LoginUrlResp buildCodeUrl(String state){
+        return new LoginUrlResp(UriComponentsBuilder
                 .fromHttpUrl(naverConfig.getCodeUrl())
                 .queryParam("client_id", naverConfig.getClientId())
                 .queryParam("client_secret", naverConfig.getClientSecret())
@@ -37,7 +44,7 @@ public class NaverManager {
                 .queryParam("redirect_uri", naverConfig.getRedirectUri())
                 .queryParam("state", state)
                 .build()
-                .toUriString();
+                .toUriString());
     }
 
     public OAuth2Token getOAuth2Token(String state, String code){
@@ -49,9 +56,9 @@ public class NaverManager {
                     .toEntity(OAuth2Token.class)
                     .getBody();
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException("네이버 token 요청 호출을 실패했습니다: " + e.getMessage(), e);
+            throw new CustomException(ErrorCode.VALIDATION_ERROR);
         } catch (Exception e) {
-            throw new RuntimeException("네이버 token 요청 중 예외가 발생했습니다.", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -74,12 +81,11 @@ public class NaverManager {
                     .header("Authorization", "Bearer " + accessToken)
                     .retrieve()
                     .body(Map.class);
-
             return (String) ((Map) response.get("response")).get("email");
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException("네이버 유저 정보 요청 호출을 실패했습니다: " + e.getMessage(), e);
+            throw new CustomException(ErrorCode.VALIDATION_ERROR);
         } catch (Exception e) {
-            throw new RuntimeException("네이버 유저 정보 요청 중 예외가 발생했습니다.", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -91,22 +97,29 @@ public class NaverManager {
     }
 
     public LocalJwtDto getLocalJwt(String email) {
-        User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.NAVER)
-                .orElseGet(() -> createNewUser(email));
-
-        return jwtTokenProvider.generate(user.getId(), user.getRole().toString());
+        try{
+            User user = userRepository.findByEmailAndSocialPlatform(email, SocialPlatform.NAVER)
+                    .orElseGet(() -> createNewUser(email));
+            return jwtTokenProvider.generate(user.getId(), user.getRole().toString());
+        } catch (Exception e){
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
     }
 
     private User createNewUser(String email) {
-        User newUser = User.builder()
-                .socialPlatform(SocialPlatform.NAVER)
-                .role(Role.USER)
-                .email(email)
-                .build();
-        return userRepository.save(newUser);
+        try{
+            User newUser = User.builder()
+                    .socialPlatform(SocialPlatform.NAVER)
+                    .role(Role.USER)
+                    .email(email)
+                    .build();
+            return userRepository.save(newUser);
+        } catch (Exception e){
+            throw new CustomException(ErrorCode.USER_SAVE_FAILED);
+        }
     }
 
-    public String sendResponseToFrontend(OAuth2Token oAuth2Token, String email, LocalJwtDto jwt) {
+    public SuccessCode sendResponseToFrontend(OAuth2Token oAuth2Token, String email, LocalJwtDto jwt) {
         LoginUserResp resp = new LoginUserResp(oAuth2Token, email, jwt);
         try {
             restClient
@@ -116,11 +129,11 @@ public class NaverManager {
                     .body(resp)
                     .retrieve()
                     .toBodilessEntity();
-            return "프론트엔드로 성공적으로 반환";
+            return SuccessCode.REQUEST_FRONT_SUCCESS;
         } catch (RestClientResponseException e) {
-            return "프론트엔드로 POST 요청 실패: " + e.getMessage();
+            throw new CustomException(ErrorCode.BAD_REQUEST);
         } catch (Exception e) {
-            return "프론트엔드로 POST 요청 중 예외 발생: " + e.getMessage();
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -132,27 +145,26 @@ public class NaverManager {
     }
 
     @Transactional
-    public String deleteAccount(String jwt, OAuth2Token oAuth2Token) {
-        try {
-            restClient
-                    .get()
-                    .uri(buildDeleteUrl(oAuth2Token.accessToken()))
-                    .retrieve()
-                    .toBodilessEntity();
-        } catch (RestClientResponseException e) {
-            return "naver session expired or server error : " + e.getMessage();
-        } catch (Exception e) {
-            return "naver server error-1";
+    public SuccessCode deleteAccount(DeleteUserReq req) {
+        restClient
+                .get()
+                .uri(buildDeleteUrl(req.oAuth2Token().accessToken()))
+                .retrieve()
+                .toBodilessEntity();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!authentication.isAuthenticated()) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        if(jwtTokenProvider.validateToken(jwt)){
-            Long userId = jwtTokenProvider.getUserId(jwt);
-            userRepository.deleteById(userId);
-            //TODO: userId 못찾을 경우 예외처리
-            return "delete success";
-        } else{
-            return "jwt session expired";
+        Long userId = Long.parseLong(authentication.getName());
+
+        if (!userRepository.existsById(userId)) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
+        userRepository.deleteById(userId);
+        return SuccessCode.REQUEST_DELETE_ACCOUNT_SUCCESS;
     }
 
     private String buildDeleteUrl(String accessToken){
@@ -165,5 +177,4 @@ public class NaverManager {
                 .build()
                 .toUriString();
     }
-
 }
