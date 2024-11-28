@@ -3,10 +3,15 @@ package com.ureca.picky_be.jpa.movie;
 import com.ureca.picky_be.jpa.config.BaseEntity;
 import com.ureca.picky_be.jpa.movieworker.MovieWorker;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Entity
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FilmCrew extends BaseEntity {
 
     @Id
@@ -24,7 +29,9 @@ public class FilmCrew extends BaseEntity {
     //    @Column(nullable = false)
     private String role;
 
-    @Column(name = "movie_id", nullable = false)
-    private Long movieId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="movie_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Movie movieId;
 
 }

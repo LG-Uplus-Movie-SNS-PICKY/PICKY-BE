@@ -3,6 +3,8 @@ package com.ureca.picky_be.jpa.movie;
 import com.ureca.picky_be.jpa.config.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Entity
@@ -18,5 +20,6 @@ public class MovieBehindVideo extends BaseEntity {
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Movie movie;
 }

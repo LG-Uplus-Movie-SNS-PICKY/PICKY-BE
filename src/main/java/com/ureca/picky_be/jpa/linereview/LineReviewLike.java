@@ -4,10 +4,13 @@ package com.ureca.picky_be.jpa.linereview;
 import com.ureca.picky_be.jpa.config.BaseEntity;
 import com.ureca.picky_be.jpa.user.User;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LineReviewLike extends BaseEntity {
 
 
@@ -28,7 +31,7 @@ public class LineReviewLike extends BaseEntity {
     private Preference preference;
 
 
-
+    private boolean isDeleted;
 
 
 }

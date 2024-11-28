@@ -3,10 +3,15 @@ package com.ureca.picky_be.jpa.movie;
 import com.ureca.picky_be.jpa.config.BaseEntity;
 import com.ureca.picky_be.jpa.playlist.Playlist;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Entity
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MoviePlayList extends BaseEntity {
 
     @Id
@@ -17,8 +22,10 @@ public class MoviePlayList extends BaseEntity {
     @JoinColumn(name="playlist_id")
     private Playlist playlist;
 
-    @Column(name="movie_id", nullable=false)
-    private Long movieId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="movie_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Movie movieId;
 
 
 }

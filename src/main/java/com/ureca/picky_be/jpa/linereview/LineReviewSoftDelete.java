@@ -1,8 +1,6 @@
 package com.ureca.picky_be.jpa.linereview;
 
 import com.ureca.picky_be.jpa.config.BaseEntity;
-import com.ureca.picky_be.jpa.movie.Movie;
-import com.ureca.picky_be.jpa.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -12,9 +10,8 @@ import org.hibernate.annotations.ColumnDefault;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LineReview extends BaseEntity {
+public class LineReviewSoftDelete extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name="user_id", nullable = false)
@@ -30,5 +27,4 @@ public class LineReview extends BaseEntity {
     private String context;
 
     private boolean isDeleted;
-
 }
