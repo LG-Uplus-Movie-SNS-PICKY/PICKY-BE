@@ -28,12 +28,12 @@ public class BoardController {
         return SuccessCode.CREATE_BOARD_SUCCESS;
     }
 
-//    @PostMapping("/{boardId}")
-//    @Operation(summary = "게시글 수정(Update)", description = "사용자가 작성한 게시글 수정")
-//    public SuccessCode updateBoard(@PathVariable Long boardId, @RequestBody UpdateBoardReq req) {
-//        boardManagingUseCase.updateBoard(boardId, req);
-//        return SuccessCode.UPDATE_BOARD_SUCCESS;
-//    }
+    @PostMapping("/{boardId}")
+    @Operation(summary = "게시글 수정(Update)", description = "사용자가 작성한 게시글 수정")
+    public SuccessCode updateBoard(@PathVariable Long boardId, @RequestBody UpdateBoardReq req) {
+        boardManagingUseCase.updateBoard(boardId, req);
+        return SuccessCode.UPDATE_BOARD_SUCCESS;
+    }
 
     @PostMapping("/{boardId}/comment")
     @Operation(summary = "게시글 댓글 생성(Create)", description = "사용자가 게시들에 댓글 작성")

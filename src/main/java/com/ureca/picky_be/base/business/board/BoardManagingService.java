@@ -39,8 +39,7 @@ public class BoardManagingService implements BoardManagingUseCase {
     @Transactional
     public void updateBoard(Long boardId , UpdateBoardReq req) {
         Long userId = authManager.getUserId();
-        boardManager.checkBoardWriteUser(boardId, userId);
-        //boardManager.updateBoard(boardId, req);
+        boardManager.updateBoard(boardId, userId, req);
     }
 
 //    @Override

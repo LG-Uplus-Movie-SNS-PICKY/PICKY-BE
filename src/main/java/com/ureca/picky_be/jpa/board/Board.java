@@ -21,7 +21,6 @@ public class Board extends BaseEntity {
     @Column(name="user_id", nullable=false)
     private Long userId;
 
-//    @Column(name = "movie_id", nullable=false)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="movie_id", nullable=false)
     private Movie movie;
@@ -60,6 +59,7 @@ public class Board extends BaseEntity {
     public void addBoardContent(BoardContent boardContent) {
         this.contents.add(boardContent);
     }
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.ureca.picky_be.base.implementation.board;
 
+import com.ureca.picky_be.base.business.board.dto.AddBoardContentReq;
 import com.ureca.picky_be.base.business.board.dto.AddBoardReq;
 import com.ureca.picky_be.base.business.board.dto.UpdateBoardReq;
 import com.ureca.picky_be.base.persistence.board.BoardRepository;
@@ -16,6 +17,8 @@ import com.ureca.picky_be.jpa.movie.Movie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -39,18 +42,27 @@ public class BoardManager {
         boardRepository.save(board);
     }
 
+    @Transactional
+    public void updateBoard(Long boardId, Long userId, UpdateBoardReq req) {
+        Movie movie = movieRepository.findById(req.movieId())
+                .orElseThrow(() -> new CustomException(ErrorCode.MOVIE_NOT_FOUND));
+        Board board = checkBoardWriteUser(boardId, userId);
 
-//    public void updateBoard(Long boardId, Long userId, UpdateBoardReq req) {
-//        Movie movie = movieRepository.findById(req.movieId())
-//                .orElseThrow(() -> new CustomException(ErrorCode.MOVIE_NOT_FOUND));
-//        Board board = checkBoardWriteUser(boardId, userId);
-//        board.getContents();
-//
-//        board.updateBoard(movie, req.boardContext(),req.isSpoiler(), req.contents());
-//        // TODO : 호출한 board 엔티티 수정
-//
-//
-//    }
+        // 생성자를 통한 Board Update
+        board.updateBoard(movie, req.boardContext(), req.isSpoiler());
+
+        // TODO : 비효율적인 Update 방식, 차후 개선 예정
+        boardContentRepository.deleteByBoardId(boardId);
+        List<BoardContent> newContents = new ArrayList<>();
+        if(!req.contents().isEmpty()) {
+            req.contents().forEach(dto -> {
+                BoardContent content = BoardContent.of(board, dto.contentUrl(), dto.type());
+                newContents.add(content);
+            });
+        }
+        boardContentRepository.saveAll(newContents);
+
+    }
 
 //    public List<Board> getRecentMovieRelatedBoards(Long movieId, Long currentBoardId) {
 //        // 최신순 기준으로 Board들을 가져온다.
@@ -72,7 +84,7 @@ public class BoardManager {
         return board;
     }
 
-    public BoardComment addBoardComment(String context, Long boardId, Long userId) {
+    public void addBoardComment(String context, Long boardId, Long userId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
         BoardComment comment = BoardComment.builder()
@@ -81,6 +93,6 @@ public class BoardManager {
                 .board(board)
                 .build();
 
-        return boardCommentRepository.save(comment);
+        boardCommentRepository.save(comment);
     }
 }
