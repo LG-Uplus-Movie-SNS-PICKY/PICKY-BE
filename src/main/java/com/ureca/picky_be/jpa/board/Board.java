@@ -33,8 +33,7 @@ public class Board extends BaseEntity {
     private boolean isSpoiler;
 
 
-    public void updateBoard(Movie movie, String context, boolean isSpoiler) {
-        this.movie = movie;
+    public void updateBoard(String context, boolean isSpoiler) {
         this.context = context;
         this.isSpoiler = isSpoiler;
     }

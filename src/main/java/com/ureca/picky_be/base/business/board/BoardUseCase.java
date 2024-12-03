@@ -1,9 +1,8 @@
 package com.ureca.picky_be.base.business.board;
 
 import com.ureca.picky_be.base.business.board.dto.*;
-import java.util.List;
 
-public interface BoardManagingUseCase {
+public interface BoardUseCase {
     void addBoard(AddBoardReq req);   // 게시글 생성
     void updateBoard(Long boardId, UpdateBoardReq req);                          // 본인이 작성한 게시글 수정
     DeleteBoardResp deleteBoard(Long boardId);                          // 본인이 작성한 게시글 삭제
