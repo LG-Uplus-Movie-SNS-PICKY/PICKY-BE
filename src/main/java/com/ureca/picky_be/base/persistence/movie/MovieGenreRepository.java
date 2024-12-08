@@ -12,11 +12,11 @@ import java.util.List;
 
 @Repository
 public interface MovieGenreRepository extends JpaRepository<MovieGenre, Long> {
-    @Query("SELECT mg.genreId FROM MovieGenre mg WHERE mg.movieId.id = :movieId")
+    @Query("SELECT mg.genreId FROM MovieGenre mg WHERE mg.movie.id = :movieId")
     List<Long> getGenreIdsByMovieId(@Param("movieId") Long movieId);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("DELETE FROM MovieGenre mg WHERE mg.movieId.id = :movieId")
+    @Query("DELETE FROM MovieGenre mg WHERE mg.movie.id = :movieId")
     void deleteMovieGenreByMovieId(@Param("movieId") Long movieId);
 }

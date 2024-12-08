@@ -14,15 +14,15 @@ import java.util.List;
 
 @Repository
 public interface FilmCrewRepository extends JpaRepository<FilmCrew, Integer> {
-    List<FilmCrew> findByMovieIdAndFilmCrewPosition(Movie movie, FilmCrewPosition filmCrewPosition);
+    List<FilmCrew> findByMovieAndFilmCrewPosition(Movie movie, FilmCrewPosition filmCrewPosition);
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM FilmCrew fc WHERE fc.movieId.id = :movieId AND fc.filmCrewPosition= 'ACTOR' ")
+    @Query("DELETE FROM FilmCrew fc WHERE fc.movie.id = :movieId AND fc.filmCrewPosition= 'ACTOR' ")
     void deleteActorsByMovieId(@Param("movieId") Long movieId);
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM FilmCrew fc WHERE fc.movieId.id = :movieId AND fc.filmCrewPosition= 'DIRECTOR' ")
+    @Query("DELETE FROM FilmCrew fc WHERE fc.movie.id = :movieId AND fc.filmCrewPosition= 'DIRECTOR' ")
     void deleteDirectorsByMovieId(@Param("movieId") Long movieId);
 }

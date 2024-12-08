@@ -25,7 +25,12 @@ public enum SuccessCode {
     CREATE_BOARD_COMMENT_SUCCESS(201, "게시글 댓글 생성 완료"),
     DELETE_BOARD_COMMENT_SUCCESS(201, "게시글 댓글 삭제 완료"),
     CREATE_BOARD_LIKE_SUCCESS(201, "게시글 좋아요 완료"),
-    DELETE_BOARD_LIKE_SUCCESS(201, "게시글 좋아요 취소 완료");
+    DELETE_BOARD_LIKE_SUCCESS(201, "게시글 좋아요 취소 완료"),
+
+    //Playlist
+    PLAYLIST_DELETE_SUCCESS(200, "플레이리스트 삭제 완료");
+
+
 
     private final int status;    // HTTP 상태 코드
     private final String message; // 성공 메시지

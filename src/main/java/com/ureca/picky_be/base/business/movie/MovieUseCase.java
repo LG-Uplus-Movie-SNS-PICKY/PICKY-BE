@@ -4,7 +4,9 @@ import com.ureca.picky_be.base.business.movie.dto.*;
 import com.ureca.picky_be.base.business.user.dto.GetMoviesForRegisReq;
 import com.ureca.picky_be.base.business.user.dto.GetMoviesForRegisResp;
 import com.ureca.picky_be.global.success.SuccessCode;
+import org.springframework.data.domain.Slice;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MovieUseCase {
@@ -17,4 +19,5 @@ public interface MovieUseCase {
     List<GetSimpleMovieResp> getMoviesByGenre(Long genreId, Long lastMovieId, Integer lastLikeCount);
     boolean movieLike(Long movieId);
     List<GetGenres> getGenres();
+    Slice<GetSimpleMovieResp> getMoviesOrderByCreatedAt(Long lastMovieId, LocalDateTime createdAt, int size);
 }

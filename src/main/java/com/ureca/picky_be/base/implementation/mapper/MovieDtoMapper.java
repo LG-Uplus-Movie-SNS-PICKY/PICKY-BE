@@ -4,16 +4,15 @@ import com.ureca.picky_be.base.business.movie.dto.GetGenres;
 import com.ureca.picky_be.base.business.movie.dto.GetMovieDetailResp;
 import com.ureca.picky_be.base.business.movie.dto.GetSimpleMovieProjection;
 import com.ureca.picky_be.base.business.movie.dto.GetSimpleMovieResp;
-import com.ureca.picky_be.base.business.user.dto.GetMoviesForRegisReq;
-import com.ureca.picky_be.base.business.user.dto.GetMoviesForRegisResp;
 import com.ureca.picky_be.jpa.genre.Genre;
 import com.ureca.picky_be.jpa.movie.FilmCrew;
 import com.ureca.picky_be.jpa.movie.Movie;
 import com.ureca.picky_be.jpa.movie.MovieBehindVideo;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -34,19 +33,19 @@ public class MovieDtoMapper {
 
         List<GetMovieDetailResp.MovieInfo.Credits.Cast> castList = actors.stream()
                 .map(actor -> new GetMovieDetailResp.MovieInfo.Credits.Cast(
-                        actor.getMovieWorkerId().getId(),
+                        actor.getMovieWorker().getId(),
                         actor.getRole(),
-                        actor.getMovieWorkerId().getName(),
-                        actor.getMovieWorkerId().getProfileUrl()
+                        actor.getMovieWorker().getName(),
+                        actor.getMovieWorker().getProfileUrl()
                 ))
                 .toList();
 
         List<GetMovieDetailResp.MovieInfo.Credits.Crew> crewList = directors.stream()
                 .map(director -> new GetMovieDetailResp.MovieInfo.Credits.Crew(
-                        director.getMovieWorkerId().getId(),
+                        director.getMovieWorker().getId(),
                         "Director",
-                        director.getMovieWorkerId().getName(),
-                        director.getMovieWorkerId().getProfileUrl()
+                        director.getMovieWorker().getName(),
+                        director.getMovieWorker().getProfileUrl()
                 ))
                 .toList();
 
@@ -77,5 +76,20 @@ public class MovieDtoMapper {
         return genres.stream()
                 .map(genre -> new GetGenres(genre.getId(), genre.getName()))
                 .toList();
+    }
+
+    public Slice<GetSimpleMovieResp> toGetSimpleMovies(List<GetSimpleMovieProjection> projections) {
+        List<GetSimpleMovieResp> simpleMovieRespList = projections.stream()
+                .map(projection -> new GetSimpleMovieResp(
+                        projection.getMovieId(),
+                        projection.getTitle(),
+                        projection.getLikes(),
+                        projection.getTotalRating(),
+                        projection.getPosterUrl(),
+                        projection.getBackdropUrl()
+                ))
+                .collect(Collectors.toList());
+
+        return new SliceImpl<>(simpleMovieRespList);
     }
 }

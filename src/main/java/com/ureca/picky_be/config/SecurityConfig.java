@@ -40,7 +40,7 @@ public class SecurityConfig {
             "/api/v1/user/genres",
 
             //플레이리스트
-            "/api/v1/playlist/all",
+            "/api/v1/playlist/all"
     };
 
     private static final String[] AUTH_WHITELIST_GET = {
@@ -67,7 +67,7 @@ public class SecurityConfig {
     };
 
     private static final String[] AUTH_ADMIN = {
-
+        "/api/v1/admin/**"
     };
 
     private static final String[] AUTH_ADMIN_POST = {

@@ -21,7 +21,7 @@ public class Platform extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="movie_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Movie movieId;
+    private Movie movie;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

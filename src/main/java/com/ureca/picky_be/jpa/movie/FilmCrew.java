@@ -20,7 +20,7 @@ public class FilmCrew extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="movie_worker_id")
-    private MovieWorker movieWorkerId;
+    private MovieWorker movieWorker;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -32,6 +32,6 @@ public class FilmCrew extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="movie_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Movie movieId;
+    private Movie movie;
 
 }

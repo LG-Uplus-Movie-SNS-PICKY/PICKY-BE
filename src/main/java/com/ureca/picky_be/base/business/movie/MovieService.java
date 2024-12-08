@@ -12,8 +12,11 @@ import com.ureca.picky_be.jpa.movie.FilmCrew;
 import com.ureca.picky_be.jpa.movie.Movie;
 import com.ureca.picky_be.jpa.movie.MovieBehindVideo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -81,5 +84,11 @@ public class MovieService implements MovieUseCase{
     public List<GetGenres> getGenres(){
         List<Genre> genres = movieManager.getGenres();
         return movieDtoMapper.toGetGenres(genres);
+    }
+
+    @Override
+    public Slice<GetSimpleMovieResp> getMoviesOrderByCreatedAt(Long lastMovieId, LocalDateTime createdAt, int size) {
+        List<GetSimpleMovieProjection> simpleMovieProjections = movieManager.getMoviesOrderByCreatedAt(lastMovieId, createdAt, size);
+        return movieDtoMapper.toGetSimpleMovies(simpleMovieProjections);
     }
 }

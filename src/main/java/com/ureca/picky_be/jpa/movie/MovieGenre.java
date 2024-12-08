@@ -21,7 +21,7 @@ public class MovieGenre extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="movie_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Movie movieId;
+    private Movie movie;
 
     @Column(nullable = false)
     private Long genreId;

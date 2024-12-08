@@ -12,7 +12,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MoviePlayList extends BaseEntity {
+public class MoviePlaylist extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +25,7 @@ public class MoviePlayList extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="movie_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Movie movieId;
+    private Movie movie;
 
 
 }
