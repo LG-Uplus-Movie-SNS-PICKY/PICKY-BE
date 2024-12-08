@@ -83,8 +83,10 @@ public enum ErrorCode {
     LINEREVIEWLIKE_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "LRL005", "자신의 한줄평에는 좋아요가 안됩니다." ),
 
     //Playlist
-    PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PL001", "플레이리스트 조회에 실패했습니다"),
-    PLAYLIST_MOVIE_NOT_FOUND(HttpStatus.NOT_FOUND, "PL002", "플레이리스트에 포함되어있는 영화 조회에 실패했습니다")
+    PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PL001", "플레이리스트 조회에 실패했습니다."),
+    PLAYLIST_MOVIE_NOT_FOUND(HttpStatus.NOT_FOUND, "PL002", "플레이리스트에 포함되어있는 영화 조회에 실패했습니다."),
+    PLAYLIST_CREATE_FAILED(HttpStatus.BAD_REQUEST, "PL003", "플레이리스트에 추가하려는 영화 리스트 혹은 제목이 null입니다."),
+    PLAYLIST_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "PL004", "수정하려는 플레이리스트의 영화 리스트 혹은 제목이 null입니다."),
 
     ;
 

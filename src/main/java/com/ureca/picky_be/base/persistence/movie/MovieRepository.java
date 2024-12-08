@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -105,5 +106,21 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     ORDER BY m.id DESC
     """)
     List<GetSimpleMovieProjection> getMoviesByPlaylistIds(@Param("playlistIds") List<Long> playlistIds);
+
+    @Query("""
+    SELECT
+        m.id AS movieId,
+        m.title AS title,
+        CAST(COUNT(ml) AS int) AS likes,
+        m.totalRating AS totalRating,
+        m.posterUrl AS posterUrl,
+        m.backdropUrl AS backdropUrl
+    FROM Movie m
+    LEFT JOIN MovieLike ml ON ml.movie.id = m.id
+    WHERE (:lastMovieId IS NULL OR m.id < :lastMovieId)
+    GROUP BY m.id, m.title, m.totalRating, m.posterUrl, m.backdropUrl
+    ORDER BY m.id DESC, :createdAt DESC
+    """)
+    List<GetSimpleMovieProjection> findMoviesOrderByCreatedAtUsingCursor(Long lastMovieId, LocalDateTime createdAt, Pageable pageable);
 }
 

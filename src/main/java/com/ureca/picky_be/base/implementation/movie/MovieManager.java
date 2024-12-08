@@ -1,9 +1,6 @@
 package com.ureca.picky_be.base.implementation.movie;
 
-import com.ureca.picky_be.base.business.movie.dto.AddMovieReq;
-import com.ureca.picky_be.base.business.movie.dto.GetMovieByGenreReq;
-import com.ureca.picky_be.base.business.movie.dto.GetSimpleMovieResp;
-import com.ureca.picky_be.base.business.movie.dto.UpdateMovieReq;
+import com.ureca.picky_be.base.business.movie.dto.*;
 import com.ureca.picky_be.base.business.user.dto.GetMoviesForRegisReq;
 import com.ureca.picky_be.base.business.user.dto.GetMoviesForRegisResp;
 import com.ureca.picky_be.base.persistence.movie.*;
@@ -329,5 +326,9 @@ public class MovieManager {
 
     public List<Genre> getGenres(){
         return genreRepository.findAll();
+    }
+
+    public List<GetSimpleMovieProjection> getMoviesOrderByCreatedAt(Long lastMovieId, LocalDateTime createdAt, int size){
+        return movieRepository.findMoviesOrderByCreatedAtUsingCursor(lastMovieId, createdAt, PageRequest.ofSize(size));
     }
 }

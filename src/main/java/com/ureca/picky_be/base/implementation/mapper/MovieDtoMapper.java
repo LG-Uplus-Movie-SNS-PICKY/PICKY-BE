@@ -10,6 +10,10 @@ import com.ureca.picky_be.jpa.genre.Genre;
 import com.ureca.picky_be.jpa.movie.FilmCrew;
 import com.ureca.picky_be.jpa.movie.Movie;
 import com.ureca.picky_be.jpa.movie.MovieBehindVideo;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -77,5 +81,20 @@ public class MovieDtoMapper {
         return genres.stream()
                 .map(genre -> new GetGenres(genre.getId(), genre.getName()))
                 .toList();
+    }
+
+    public Slice<GetSimpleMovieResp> toGetSimpleMovies(List<GetSimpleMovieProjection> projections) {
+        List<GetSimpleMovieResp> simpleMovieRespList = projections.stream()
+                .map(projection -> new GetSimpleMovieResp(
+                        projection.getMovieId(),
+                        projection.getTitle(),
+                        projection.getLikes(),
+                        projection.getTotalRating(),
+                        projection.getPosterUrl(),
+                        projection.getBackdropUrl()
+                ))
+                .collect(Collectors.toList());
+
+        return new SliceImpl<>(simpleMovieRespList);
     }
 }

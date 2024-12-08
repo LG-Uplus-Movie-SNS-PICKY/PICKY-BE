@@ -19,4 +19,8 @@ public class Playlist extends BaseEntity {
 
     @Column(nullable = false)
     private String title;
+
+    public void updatePlaylistTitle(String title){
+        this.title = title;
+    }
 }
